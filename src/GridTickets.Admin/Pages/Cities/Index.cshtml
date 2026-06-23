@@ -1,0 +1,85 @@
+@page
+@model GridTickets.Admin.Pages.Cities.CitiesIndexModel
+@{
+    ViewData["Title"] = "Cities";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Cities</h5>
+    <a asp-page="/Cities/Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add City
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4" style="width:80px;">Image</th>
+                    <th>Name</th>
+                    <th>State</th>
+                    <th>Order</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Cities.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No cities yet. <a asp-page="/Cities/Create">Add one</a>.
+                        </td>
+                    </tr>
+                }
+                @foreach (var city in Model.Cities)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            @if (!string.IsNullOrEmpty(city.ImageUrl))
+                            {
+                                <img src="@city.ImageUrl" alt="@city.Name"
+                                     class="rounded-2 object-fit-cover"
+                                     style="width:56px;height:56px;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-2 bg-light d-flex align-items-center justify-content-center"
+                                     style="width:56px;height:56px;">
+                                    <i class="bi bi-buildings text-muted"></i>
+                                </div>
+                            }
+                        </td>
+                        <td class="fw-semibold align-middle">@city.Name</td>
+                        <td class="align-middle text-muted small">@city.State</td>
+                        <td class="align-middle">@city.SortOrder</td>
+                        <td class="align-middle">
+                            @if (city.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td class="align-middle text-end pe-3">
+                            <a asp-page="/Cities/Edit" asp-route-id="@city.Id"
+                               class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                <input type="hidden" name="id" value="@city.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Delete @city.Name?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

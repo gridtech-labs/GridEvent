@@ -1,0 +1,149 @@
+@page
+@model GridTickets.Admin.Pages.Events.EventsIndexModel
+@{
+    ViewData["Title"] = "Events";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="mb-1 fw-semibold">Event Management</h5>
+        <p class="text-muted small mb-0">@Model.TotalCount total events</p>
+    </div>
+    <a asp-page="/Events/Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add Event
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="search" value="@Model.Search"
+                       class="form-control form-control-sm" placeholder="Search by title..." />
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    @foreach (var s in new[] { "Draft", "Published", "Cancelled", "Completed" })
+                    {
+                        <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-page="/Events/Index" class="btn btn-outline-secondary btn-sm ms-1">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Title</th>
+                    <th>Category</th>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Min Price</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Events.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No events found.</td></tr>
+                }
+                @foreach (var e in Model.Events)
+                {
+                    <tr>
+                        <td class="ps-4 fw-medium">@e.Title</td>
+                        <td class="text-muted small">@e.CategoryName</td>
+                        <td class="text-muted small">@e.VenueName, @e.VenueCity</td>
+                        <td class="text-muted small">@e.StartDate.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <span class="badge @(e.Status == "Published" ? "bg-success" : e.Status == "Cancelled" ? "bg-danger" : e.Status == "Completed" ? "bg-secondary" : "bg-warning text-dark")">
+                                @e.Status
+                            </span>
+                        </td>
+                        <td class="text-muted small">@(e.MinPrice > 0 ? $"₹{e.MinPrice:N0}" : "—")</td>
+                        <td>
+                            <a asp-page="/Events/Edit" asp-route-id="@e.Id"
+                               class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="confirmDelete('@e.Id', '@e.Title')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Events/Index"
+                           asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search">&laquo;</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-page="/Events/Index"
+                               asp-route-page="@i" asp-route-search="@Model.Search">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Events/Index"
+                           asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<form method="post" asp-page-handler="Delete" id="deleteForm">
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
+                <p class="mt-2 mb-1 fw-semibold">Delete event?</p>
+                <p class="text-muted small" id="deleteEventTitle"></p>
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('deleteForm').submit()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, title) {
+            document.getElementById('deleteId').value = id;
+            document.getElementById('deleteEventTitle').textContent = title;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

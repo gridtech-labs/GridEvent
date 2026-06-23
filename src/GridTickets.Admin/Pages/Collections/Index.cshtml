@@ -1,0 +1,72 @@
+@page
+@model GridTickets.Admin.Pages.Collections.CollectionIndexModel
+@{
+    ViewData["Title"] = "Collections";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Collections</h5>
+    <a asp-page="/Collections/Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add Collection
+    </a>
+</div>
+
+@if (TempData["Success"] is string msg)
+{
+    <div class="alert alert-success alert-dismissible small py-2">
+        @msg <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Name</th>
+                    <th>Description</th>
+                    <th>Sort Order</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Collections.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No collections yet.</td></tr>
+                }
+                @foreach (var c in Model.Collections)
+                {
+                    <tr>
+                        <td class="ps-4 fw-medium">@c.Name</td>
+                        <td class="text-muted small">@(c.Description ?? "—")</td>
+                        <td>@c.SortOrder</td>
+                        <td>
+                            @if (c.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td class="text-end pe-4">
+                            <a asp-page="/Collections/Edit" asp-route-id="@c.Id"
+                               class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Delete collection \'@c.Name\'?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

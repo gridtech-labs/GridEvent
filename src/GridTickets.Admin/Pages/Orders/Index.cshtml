@@ -1,0 +1,129 @@
+@page
+@model GridTickets.Admin.Pages.Orders.OrdersIndexModel
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="mb-1 fw-semibold">Order Management</h5>
+        <p class="text-muted small mb-0">@Model.TotalCount total orders</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="search" value="@Model.Search"
+                       class="form-control form-control-sm" placeholder="Search by name, email, Razorpay ID..." />
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    @foreach (var s in new[] { "Pending", "Confirmed", "Cancelled", "Expired", "Failed" })
+                    {
+                        <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-page="/Orders/Index" class="btn btn-outline-secondary btn-sm ms-1">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Customer</th>
+                    <th>Event</th>
+                    <th>Items</th>
+                    <th>Grand Total</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Expires</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Orders.Any())
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-4">No orders found.</td></tr>
+                }
+                @foreach (var o in Model.Orders)
+                {
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-medium small">@o.CustomerName</div>
+                            <div class="text-muted" style="font-size:0.78rem;">@o.CustomerEmail</div>
+                        </td>
+                        <td class="small">@o.EventTitle</td>
+                        <td class="small text-muted">@o.ItemCount ticket(s)</td>
+                        <td class="small fw-semibold">₹@o.GrandTotal.ToString("N0")</td>
+                        <td>
+                            <span class="badge @StatusBadgeClass(o.Status)">@o.Status</span>
+                        </td>
+                        <td class="text-muted small">@o.CreatedAt.ToString("dd MMM yy HH:mm")</td>
+                        <td class="small @(o.Status == "Pending" && o.ExpiresAt < DateTime.UtcNow ? "text-danger" : "text-muted")">
+                            @o.ExpiresAt.ToString("dd MMM yy HH:mm")
+                        </td>
+                        <td>
+                            <a asp-page="/Orders/Detail" asp-route-id="@o.Id"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Orders/Index"
+                           asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search">&laquo;</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-page="/Orders/Index"
+                               asp-route-page="@i" asp-route-search="@Model.Search">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Orders/Index"
+                           asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+@functions {
+    string StatusBadgeClass(string status) => status switch
+    {
+        "Confirmed" => "bg-success",
+        "Pending" => "bg-warning text-dark",
+        "Cancelled" => "bg-secondary",
+        "Expired" => "bg-secondary",
+        "Failed" => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+}

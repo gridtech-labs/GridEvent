@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GridTickets.Admin/GridTickets.Admin.csproj" />
+    <Project Path="src/GridTickets.Api/GridTickets.Api.csproj" />
+    <Project Path="src/GridTickets.Application/GridTickets.Application.csproj" />
+    <Project Path="src/GridTickets.Domain/GridTickets.Domain.csproj" />
+    <Project Path="src/GridTickets.Infrastructure/GridTickets.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GridTickets.Application.Tests/GridTickets.Application.Tests.csproj" />
+    <Project Path="tests/GridTickets.Domain.Tests/GridTickets.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

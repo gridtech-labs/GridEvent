@@ -1,0 +1,291 @@
+@page "{id:guid}"
+@model GridTickets.Admin.Pages.Events.EventEditModel
+@{
+    ViewData["Title"] = "Edit Event";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Edit Event</h5>
+    <a asp-page="/Events/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<!-- Event Details -->
+<div class="card border-0 shadow-sm mb-4" style="max-width:720px;">
+    <div class="card-header bg-white fw-semibold border-bottom py-3">Event Details</div>
+    <div class="card-body">
+        <form method="post" asp-page-handler="SaveEvent" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+            <div class="mb-3">
+                <label class="form-label fw-medium">Title <span class="text-danger">*</span></label>
+                <input asp-for="Input.Title" class="form-control" />
+                <span asp-validation-for="Input.Title" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
+                <textarea asp-for="Input.Description" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Input.Description" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Start Date & Time <span class="text-danger">*</span></label>
+                    <input asp-for="Input.StartDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Input.StartDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">End Date & Time <span class="text-danger">*</span></label>
+                    <input asp-for="Input.EndDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Input.EndDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Venue <span class="text-danger">*</span></label>
+                    <select asp-for="Input.VenueId" class="form-select"
+                            asp-items="@(new SelectList(Model.Venues, "Id", "Name"))">
+                        <option value="">— Select Venue —</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Category <span class="text-danger">*</span></label>
+                    <select asp-for="Input.CategoryId" class="form-select"
+                            asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                        <option value="">— Select Category —</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-medium">Collection</label>
+                <select asp-for="Input.CollectionId" class="form-select" style="max-width:360px;">
+                    <option value="">— None —</option>
+                    @foreach (var c in Model.Collections)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+                @if (!Model.Collections.Any())
+                {
+                    <div class="form-text text-muted">
+                        No active collections. <a asp-page="/Collections/Create">Add one.</a>
+                    </div>
+                }
+            </div>
+
+            <!-- Banner Image Upload -->
+            <div class="mb-3">
+                <label class="form-label fw-medium">Banner / Thumbnail Image</label>
+                <div class="border rounded-3 p-3 bg-light">
+                    <div id="previewWrap" class="mb-2 @(string.IsNullOrEmpty(Model.Input.BannerImageUrl) ? "d-none" : "")">
+                        <img id="imgPreview" src="@Model.Input.BannerImageUrl" alt="Preview"
+                             class="rounded-2 object-fit-cover w-100"
+                             style="max-height:220px;" />
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <label for="BannerImage" class="btn btn-outline-primary btn-sm mb-0">
+                            <i class="bi bi-upload me-1"></i> Upload New Image
+                        </label>
+                        <input type="file" id="BannerImage" name="BannerImage" accept="image/*"
+                               class="d-none" onchange="previewImage(this)" />
+                        <span id="fileName" class="small text-muted">No file chosen</span>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label small text-muted mb-1">Or paste an image URL</label>
+                        <input asp-for="Input.BannerImageUrl" class="form-control form-control-sm"
+                               placeholder="https://example.com/image.jpg"
+                               oninput="previewUrl(this.value)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-medium">Status</label>
+                <select asp-for="Input.Status" class="form-select" style="max-width:200px;">
+                    <option value="Draft">Draft</option>
+                    <option value="Published">Published</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Ticket Tiers -->
+<div class="card border-0 shadow-sm" style="max-width:720px;">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <span class="fw-semibold">Ticket Tiers</span>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addTierModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Tier
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Name</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Sold</th>
+                    <th>Available</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Tiers.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-3">No ticket tiers yet.</td></tr>
+                }
+                @foreach (var t in Model.Tiers)
+                {
+                    <tr>
+                        <td class="ps-4 fw-medium">@t.Name
+                            @if (!string.IsNullOrEmpty(t.Description))
+                            {
+                                <div class="text-muted small">@t.Description</div>
+                            }
+                        </td>
+                        <td>₹@t.Price.ToString("N0")</td>
+                        <td>@t.TotalQuantity</td>
+                        <td>@t.SoldQuantity</td>
+                        <td>
+                            <span class="badge @(t.AvailableQuantity == 0 ? "bg-danger" : t.AvailableQuantity < 10 ? "bg-warning text-dark" : "bg-success")">
+                                @t.AvailableQuantity
+                            </span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+                                    onclick="editTier('@t.Id', '@t.Name', '@t.Description', @t.Price, @t.TotalQuantity)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="post" asp-page-handler="DeleteTier" class="d-inline">
+                                <input type="hidden" name="tierId" value="@t.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Delete this tier?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Tier Modal -->
+<div class="modal fade" id="addTierModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="AddTier">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Ticket Tier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
+                        <input name="tierName" class="form-control" required placeholder="e.g. General, VIP, Premium" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description</label>
+                        <input name="tierDescription" class="form-control" placeholder="Optional" />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Price (₹) <span class="text-danger">*</span></label>
+                            <input name="tierPrice" type="number" step="0.01" min="0" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Total Quantity <span class="text-danger">*</span></label>
+                            <input name="tierQuantity" type="number" min="1" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Tier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Tier Modal -->
+<div class="modal fade" id="editTierModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="EditTier">
+                <input type="hidden" name="tierId" id="editTierId" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Ticket Tier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
+                        <input id="editTierName" name="tierName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description</label>
+                        <input id="editTierDesc" name="tierDescription" class="form-control" />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Price (₹) <span class="text-danger">*</span></label>
+                            <input id="editTierPrice" name="tierPrice" type="number" step="0.01" min="0" class="form-control" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Total Quantity <span class="text-danger">*</span></label>
+                            <input id="editTierQty" name="tierQuantity" type="number" min="1" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            const label = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name;
+                const reader = new FileReader();
+                reader.onload = e => { img.src = e.target.result; wrap.classList.remove('d-none'); };
+                reader.readAsDataURL(input.files[0]);
+                document.getElementById('Input_BannerImageUrl').value = '';
+            }
+        }
+        function previewUrl(url) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            if (url) { img.src = url; wrap.classList.remove('d-none'); }
+            else { wrap.classList.add('d-none'); }
+        }
+        function editTier(id, name, description, price, qty) {
+            document.getElementById('editTierId').value = id;
+            document.getElementById('editTierName').value = name;
+            document.getElementById('editTierDesc').value = description || '';
+            document.getElementById('editTierPrice').value = price;
+            document.getElementById('editTierQty').value = qty;
+            new bootstrap.Modal(document.getElementById('editTierModal')).show();
+        }
+    </script>
+}

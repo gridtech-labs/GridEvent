@@ -1,0 +1,148 @@
+@page
+@model GridTickets.Admin.Pages.Events.EventCreateModel
+@{
+    ViewData["Title"] = "Add Event";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Add Event</h5>
+    <a asp-page="/Events/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:720px;">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+            <div class="mb-3">
+                <label class="form-label fw-medium">Title <span class="text-danger">*</span></label>
+                <input asp-for="Input.Title" class="form-control" placeholder="Event title" />
+                <span asp-validation-for="Input.Title" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
+                <textarea asp-for="Input.Description" class="form-control" rows="4" placeholder="Event details..."></textarea>
+                <span asp-validation-for="Input.Description" class="text-danger small"></span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Start Date & Time <span class="text-danger">*</span></label>
+                    <input asp-for="Input.StartDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Input.StartDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">End Date & Time <span class="text-danger">*</span></label>
+                    <input asp-for="Input.EndDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="Input.EndDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Venue <span class="text-danger">*</span></label>
+                    <select asp-for="Input.VenueId" class="form-select"
+                            asp-items="@(new SelectList(Model.Venues, "Id", "Name"))">
+                        <option value="">— Select Venue —</option>
+                    </select>
+                    <span asp-validation-for="Input.VenueId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Category <span class="text-danger">*</span></label>
+                    <select asp-for="Input.CategoryId" class="form-select"
+                            asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                        <option value="">— Select Category —</option>
+                    </select>
+                    <span asp-validation-for="Input.CategoryId" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-medium">Collection</label>
+                <select asp-for="Input.CollectionId" class="form-select" style="max-width:360px;">
+                    <option value="">— None —</option>
+                    @foreach (var c in Model.Collections)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+                @if (!Model.Collections.Any())
+                {
+                    <div class="form-text text-muted">
+                        No active collections. <a asp-page="/Collections/Create">Add one.</a>
+                    </div>
+                }
+            </div>
+
+            <!-- Banner Image Upload -->
+            <div class="mb-3">
+                <label class="form-label fw-medium">Banner / Thumbnail Image</label>
+                <div class="border rounded-3 p-3 bg-light">
+                    <div id="previewWrap" class="mb-2 d-none">
+                        <img id="imgPreview" src="#" alt="Preview"
+                             class="rounded-2 object-fit-cover w-100"
+                             style="max-height:220px;" />
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <label for="BannerImage" class="btn btn-outline-primary btn-sm mb-0">
+                            <i class="bi bi-upload me-1"></i> Upload Image
+                        </label>
+                        <input type="file" id="BannerImage" name="BannerImage" accept="image/*"
+                               class="d-none" onchange="previewImage(this)" />
+                        <span id="fileName" class="small text-muted">No file chosen</span>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label small text-muted mb-1">Or paste an image URL</label>
+                        <input asp-for="Input.BannerImageUrl" class="form-control form-control-sm"
+                               placeholder="https://example.com/image.jpg"
+                               oninput="previewUrl(this.value)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-medium">Status</label>
+                <select asp-for="Input.Status" class="form-select" style="max-width:200px;">
+                    <option value="Draft">Draft</option>
+                    <option value="Published">Published</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Event
+                </button>
+                <a asp-page="/Events/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            const label = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name;
+                const reader = new FileReader();
+                reader.onload = e => { img.src = e.target.result; wrap.classList.remove('d-none'); };
+                reader.readAsDataURL(input.files[0]);
+                // clear the URL field since file takes priority
+                document.getElementById('Input_BannerImageUrl').value = '';
+            }
+        }
+        function previewUrl(url) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            if (url) { img.src = url; wrap.classList.remove('d-none'); }
+            else { wrap.classList.add('d-none'); }
+        }
+    </script>
+}

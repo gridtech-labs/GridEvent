@@ -1,0 +1,117 @@
+@page
+@model GridTickets.Admin.Pages.Users.UsersIndexModel
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h5 class="mb-1 fw-semibold">User Management</h5>
+        <p class="text-muted small mb-0">@Model.TotalCount total users</p>
+    </div>
+</div>
+
+<!-- Search/Filter Bar -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="search" value="@Model.Search"
+                       class="form-control form-control-sm" placeholder="Search by name or email..." />
+            </div>
+            <div class="col-md-2">
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">All Roles</option>
+                    <option value="Admin" selected="@(Model.RoleFilter == "Admin")">Admin</option>
+                    <option value="Organizer" selected="@(Model.RoleFilter == "Organizer")">Organizer</option>
+                    <option value="Customer" selected="@(Model.RoleFilter == "Customer")">Customer</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-page="/Users/Index" class="btn btn-outline-secondary btn-sm ms-1">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Users.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>
+                }
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td class="ps-4 fw-medium">@user.FullName</td>
+                        <td>@user.Email</td>
+                        <td>@(user.PhoneNumber ?? "—")</td>
+                        <td>
+                            @foreach (var role in user.Roles)
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(user.Status == "Active" ? "bg-success" : user.Status == "Suspended" ? "bg-danger" : "bg-secondary")">
+                                @user.Status
+                            </span>
+                        </td>
+                        <td class="text-muted small">@user.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <a asp-page="/Users/Detail" asp-route-id="@user.Id"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                Showing @((Model.Page - 1) * Model.PageSize + 1)–@(Math.Min(Model.Page * Model.PageSize, Model.TotalCount))
+                of @Model.TotalCount
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Users/Index"
+                           asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search">&laquo;</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-page="/Users/Index"
+                               asp-route-page="@i" asp-route-search="@Model.Search">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-page="/Users/Index"
+                           asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

@@ -1,0 +1,83 @@
+@page "{id:guid}"
+@model GridTickets.Admin.Pages.Venues.VenueEditModel
+@{
+    ViewData["Title"] = "Edit Venue";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Edit Venue</h5>
+    <a asp-page="/Venues/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:640px;">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+            <div class="mb-3">
+                <label class="form-label fw-medium">Name <span class="text-danger">*</span></label>
+                <input asp-for="Input.Name" class="form-control" />
+                <span asp-validation-for="Input.Name" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Address <span class="text-danger">*</span></label>
+                <input asp-for="Input.Address" class="form-control" />
+                <span asp-validation-for="Input.Address" class="text-danger small"></span>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">City <span class="text-danger">*</span></label>
+                    <select asp-for="Input.City" id="citySelect" class="form-select" onchange="onCityChange(this)">
+                        <option value="">— Select City —</option>
+                        @foreach (var c in Model.Cities)
+                        {
+                            <option value="@c.Name" data-state="@c.State">@c.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.City" class="text-danger small"></span>
+                    @if (!Model.Cities.Any())
+                    {
+                        <div class="form-text text-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            No active cities found. <a asp-page="/Cities/Create">Add a city first.</a>
+                        </div>
+                    }
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">State <span class="text-danger">*</span></label>
+                    <input asp-for="Input.State" id="stateInput" class="form-control" readonly />
+                    <span asp-validation-for="Input.State" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-medium">Capacity <span class="text-danger">*</span></label>
+                <input asp-for="Input.Capacity" type="number" class="form-control" />
+                <span asp-validation-for="Input.Capacity" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Changes
+                </button>
+                <a asp-page="/Venues/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function onCityChange(select) {
+            const opt = select.options[select.selectedIndex];
+            document.getElementById('stateInput').value = opt.dataset.state ?? '';
+        }
+        // On page load, ensure state is pre-filled if a city is already selected
+        document.addEventListener('DOMContentLoaded', function () {
+            const sel = document.getElementById('citySelect');
+            if (sel && sel.value) onCityChange(sel);
+        });
+    </script>
+}

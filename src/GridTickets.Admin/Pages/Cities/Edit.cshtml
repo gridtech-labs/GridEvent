@@ -1,0 +1,104 @@
+@page "{id:guid}"
+@model GridTickets.Admin.Pages.Cities.CityEditModel
+@{
+    ViewData["Title"] = "Edit City";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-semibold">Edit City</h5>
+    <a asp-page="/Cities/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:560px;">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2"></div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-7">
+                    <label class="form-label fw-medium">City Name <span class="text-danger">*</span></label>
+                    <input asp-for="Input.Name" class="form-control" />
+                    <span asp-validation-for="Input.Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-medium">State <span class="text-danger">*</span></label>
+                    <input asp-for="Input.State" class="form-control" />
+                    <span asp-validation-for="Input.State" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- City Image Upload -->
+            <div class="mb-3">
+                <label class="form-label fw-medium">City Image</label>
+                <div class="border rounded-3 p-3 bg-light">
+                    <div id="previewWrap" class="mb-2 @(string.IsNullOrEmpty(Model.Input.ImageUrl) ? "d-none" : "")">
+                        <img id="imgPreview" src="@Model.Input.ImageUrl" alt="Preview"
+                             class="rounded-2 object-fit-cover"
+                             style="width:120px;height:120px;" />
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <label for="CityImage" class="btn btn-outline-primary btn-sm mb-0">
+                            <i class="bi bi-upload me-1"></i> Upload New Image
+                        </label>
+                        <input type="file" id="CityImage" name="CityImage" accept="image/*"
+                               class="d-none" onchange="previewImage(this)" />
+                        <span id="fileName" class="small text-muted">No file chosen</span>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label small text-muted mb-1">Or paste an image URL</label>
+                        <input asp-for="Input.ImageUrl" class="form-control form-control-sm"
+                               placeholder="https://example.com/city.jpg"
+                               oninput="previewUrl(this.value)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-medium">Sort Order</label>
+                    <input asp-for="Input.SortOrder" type="number" min="0" class="form-control" />
+                    <div class="form-text">Lower = shown first</div>
+                </div>
+                <div class="col-md-8 d-flex align-items-end pb-1">
+                    <div class="form-check">
+                        <input asp-for="Input.IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="Input.IsActive" class="form-check-label fw-medium">Active</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Changes
+                </button>
+                <a asp-page="/Cities/Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            const label = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                label.textContent = input.files[0].name;
+                const reader = new FileReader();
+                reader.onload = e => { img.src = e.target.result; wrap.classList.remove('d-none'); };
+                reader.readAsDataURL(input.files[0]);
+                document.getElementById('Input_ImageUrl').value = '';
+            }
+        }
+        function previewUrl(url) {
+            const wrap = document.getElementById('previewWrap');
+            const img = document.getElementById('imgPreview');
+            if (url) { img.src = url; wrap.classList.remove('d-none'); }
+            else { wrap.classList.add('d-none'); }
+        }
+    </script>
+}
