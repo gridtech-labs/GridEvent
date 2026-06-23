@@ -48,7 +48,7 @@ builder.Services.Configure<GridTickets.Api.Controllers.RazorpaySettings>(
 builder.Services.AddHttpClient();
 
 // Hangfire
-var dbConnectionString = DependencyInjection.ResolveConnectionString(builder.Configuration);
+var dbConnectionString = GridTickets.Infrastructure.DependencyInjection.ResolveConnectionString(builder.Configuration);
 builder.Services.AddHangfire(cfg => cfg
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()

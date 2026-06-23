@@ -21,7 +21,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Hangfire (dashboard only — no server, API runs the background worker)
-var dbConnectionString = DependencyInjection.ResolveConnectionString(builder.Configuration);
+var dbConnectionString = GridTickets.Infrastructure.DependencyInjection.ResolveConnectionString(builder.Configuration);
 builder.Services.AddHangfire(cfg => cfg
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
