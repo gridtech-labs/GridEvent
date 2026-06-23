@@ -1,0 +1,23 @@
+# ── Build ────────────────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+COPY src/GridTickets.Domain/GridTickets.Domain.csproj                   src/GridTickets.Domain/
+COPY src/GridTickets.Application/GridTickets.Application.csproj         src/GridTickets.Application/
+COPY src/GridTickets.Infrastructure/GridTickets.Infrastructure.csproj   src/GridTickets.Infrastructure/
+COPY src/GridTickets.Admin/GridTickets.Admin.csproj                     src/GridTickets.Admin/
+RUN dotnet restore src/GridTickets.Admin/GridTickets.Admin.csproj
+
+COPY . .
+RUN dotnet publish src/GridTickets.Admin/GridTickets.Admin.csproj \
+    -c Release -o /app/publish /p:UseAppHost=false
+
+# ── Runtime ───────────────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "GridTickets.Admin.dll"]

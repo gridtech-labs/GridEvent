@@ -51,8 +51,10 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection(); // Railway handles TLS at the edge; only redirect locally
+}
 app.UseStaticFiles(); // serves runtime-uploaded files from wwwroot
 app.UseRouting();
 app.UseAuthentication();

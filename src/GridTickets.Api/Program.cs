@@ -81,15 +81,18 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// CORS — allow Next.js dev server
+// CORS — origins controlled via AllowedOrigins:CustomerWeb (comma-separated in production)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CustomerWebPolicy", policy =>
-        policy.WithOrigins(
-                builder.Configuration["AllowedOrigins:CustomerWeb"] ?? "http://localhost:3000")
+    {
+        var origins = (builder.Configuration["AllowedOrigins:CustomerWeb"] ?? "http://localhost:3000")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        policy.WithOrigins(origins)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials();
+    });
 });
 
 // ── Pipeline ──────────────────────────────────────────────────────────────────
@@ -102,9 +105,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection(); // Railway handles TLS at the edge; only redirect locally
 }
-
-app.UseHttpsRedirection();
 app.UseCors("CustomerWebPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
