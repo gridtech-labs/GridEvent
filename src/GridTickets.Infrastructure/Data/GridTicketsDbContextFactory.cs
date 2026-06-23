@@ -16,7 +16,7 @@ public class GridTicketsDbContextFactory : IDesignTimeDbContextFactory<GridTicke
 
         var optionsBuilder = new DbContextOptionsBuilder<GridTicketsDbContext>();
         optionsBuilder.UseNpgsql(
-            configuration.GetConnectionString("DefaultConnection"),
+            DependencyInjection.ResolveConnectionString(configuration),
             npgsql => npgsql.MigrationsAssembly(typeof(GridTicketsDbContext).Assembly.FullName));
 
         return new GridTicketsDbContext(optionsBuilder.Options);

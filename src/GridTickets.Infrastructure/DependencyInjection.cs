@@ -14,15 +14,50 @@ namespace GridTickets.Infrastructure;
 
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Resolves the Npgsql connection string from either the standard
+    /// ConnectionStrings:DefaultConnection config key or the DATABASE_URL
+    /// environment variable (Railway / Heroku postgresql:// URL format).
+    /// </summary>
+    public static string ResolveConnectionString(IConfiguration configuration)
+    {
+        var cs = configuration.GetConnectionString("DefaultConnection")
+                 ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
+        if (string.IsNullOrEmpty(cs))
+            throw new InvalidOperationException(
+                "No database connection string configured. " +
+                "Set ConnectionStrings__DefaultConnection or DATABASE_URL.");
+
+        // Convert postgresql:// / postgres:// URL to Npgsql key=value format
+        if (cs.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
+            cs.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(cs);
+            var userInfo = uri.UserInfo.Split(':', 2);
+            var username = Uri.UnescapeDataString(userInfo[0]);
+            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+            var port = uri.Port < 0 ? 5432 : uri.Port;
+            var database = uri.AbsolutePath.TrimStart('/');
+            return $"Host={uri.Host};Port={port};Database={database};" +
+                   $"Username={username};Password={password};" +
+                   $"SSL Mode=Require;Trust Server Certificate=true";
+        }
+
+        return cs;
+    }
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var connectionString = ResolveConnectionString(configuration);
+
         // PostgreSQL + EF Core
         services.AddDbContext<GridTicketsDbContext>(options =>
             options
                 .UseNpgsql(
-                    configuration.GetConnectionString("DefaultConnection"),
+                    connectionString,
                     npgsql => npgsql.MigrationsAssembly(typeof(GridTicketsDbContext).Assembly.FullName))
                 .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 

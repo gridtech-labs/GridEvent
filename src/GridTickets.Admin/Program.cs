@@ -21,11 +21,12 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Hangfire (dashboard only — no server, API runs the background worker)
+var dbConnectionString = DependencyInjection.ResolveConnectionString(builder.Configuration);
 builder.Services.AddHangfire(cfg => cfg
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+    .UsePostgreSqlStorage(dbConnectionString));
 
 // Configure the Identity cookie scheme (registered by AddIdentity in Infrastructure)
 builder.Services.ConfigureApplicationCookie(options =>
