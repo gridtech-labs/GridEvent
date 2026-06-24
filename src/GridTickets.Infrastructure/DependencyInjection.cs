@@ -21,31 +21,37 @@ public static class DependencyInjection
     /// </summary>
     public static string ResolveConnectionString(IConfiguration configuration)
     {
-        // DATABASE_URL takes priority so Railway's injected value overrides appsettings.json
-        var cs = Environment.GetEnvironmentVariable("DATABASE_URL")
-                 ?? configuration.GetConnectionString("DefaultConnection");
+        // Check all Railway-style env vars in priority order
+        var raw = Environment.GetEnvironmentVariable("DATABASE_URL")
+                  ?? Environment.GetEnvironmentVariable("DATABASE_PUBLIC_URL")
+                  ?? configuration.GetConnectionString("DefaultConnection");
 
-        if (string.IsNullOrEmpty(cs))
+        if (string.IsNullOrEmpty(raw))
             throw new InvalidOperationException(
                 "No database connection string configured. " +
-                "Set ConnectionStrings__DefaultConnection or DATABASE_URL.");
+                "Set DATABASE_URL, DATABASE_PUBLIC_URL, or ConnectionStrings__DefaultConnection.");
 
-        // Convert postgresql:// / postgres:// URL to Npgsql key=value format
-        if (cs.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
-            cs.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
-        {
-            var uri = new Uri(cs);
-            var userInfo = uri.UserInfo.Split(':', 2);
-            var username = Uri.UnescapeDataString(userInfo[0]);
-            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-            var port = uri.Port < 0 ? 5432 : uri.Port;
-            var database = uri.AbsolutePath.TrimStart('/');
-            return $"Host={uri.Host};Port={port};Database={database};" +
-                   $"Username={username};Password={password};" +
-                   $"SSL Mode=Require;Trust Server Certificate=true";
-        }
+        return ConvertToNpgsql(raw);
+    }
 
-        return cs;
+    private static string ConvertToNpgsql(string cs)
+    {
+        if (!cs.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) &&
+            !cs.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+            return cs;
+
+        var uri = new Uri(cs);
+        var userInfo = uri.UserInfo.Split(':', 2);
+        var username = Uri.UnescapeDataString(userInfo[0]);
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var port = uri.Port < 0 ? 5432 : uri.Port;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        Console.WriteLine($"[DB] Resolved host={uri.Host} port={port} db={database}");
+
+        return $"Host={uri.Host};Port={port};Database={database};" +
+               $"Username={username};Password={password};" +
+               $"SSL Mode=Require;Trust Server Certificate=true";
     }
 
     public static IServiceCollection AddInfrastructure(
