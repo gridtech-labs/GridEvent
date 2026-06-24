@@ -21,8 +21,9 @@ public static class DependencyInjection
     /// </summary>
     public static string ResolveConnectionString(IConfiguration configuration)
     {
-        var cs = configuration.GetConnectionString("DefaultConnection")
-                 ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+        // DATABASE_URL takes priority so Railway's injected value overrides appsettings.json
+        var cs = Environment.GetEnvironmentVariable("DATABASE_URL")
+                 ?? configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrEmpty(cs))
             throw new InvalidOperationException(
