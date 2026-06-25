@@ -4,6 +4,7 @@ using GridTickets.Infrastructure.Data;
 using GridTickets.Infrastructure.Data.Seed;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,15 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/");
     options.Conventions.AllowAnonymousToPage("/Auth/Login");
     options.Conventions.AllowAnonymousToPage("/Auth/AccessDenied");
+    options.Conventions.AllowAnonymousToPage("/Error");
+});
+
+// Trust Railway's reverse proxy so HTTPS cookies work correctly
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 builder.Services.AddApplication();
@@ -36,6 +46,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Auth/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization(options =>
@@ -47,15 +59,10 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
-else
-{
-    app.UseHttpsRedirection(); // Railway handles TLS at the edge; only redirect locally
-}
+// Must be first — lets ASP.NET Core see X-Forwarded-Proto: https from Railway's edge
+app.UseForwardedHeaders();
+
+app.UseExceptionHandler("/Error");
 app.UseStaticFiles(); // serves runtime-uploaded files from wwwroot
 app.UseRouting();
 app.UseAuthentication();
