@@ -102,10 +102,11 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
     app.UseHttpsRedirection(); // Railway handles TLS at the edge; only redirect locally
 }
 app.UseCors("CustomerWebPolicy");
