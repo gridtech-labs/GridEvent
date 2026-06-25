@@ -32,8 +32,13 @@ export function Navbar({ showSearch = false, search = "", onSearch }: NavbarProp
       <div className="flex items-center gap-3 px-4 sm:px-6 lg:px-10 h-14">
 
         {/* Logo */}
-        <Link href="/" className="text-lg font-black tracking-tight shrink-0 mr-1">
-          Grid<span className="text-violet-600">Tickets</span>
+        <Link href="/" className="flex items-center gap-1.5 shrink-0 mr-1">
+          <svg className="w-6 h-6 text-violet-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 9.5A1.5 1.5 0 0 1 4.5 8h15A1.5 1.5 0 0 1 21 9.5v1a2 2 0 0 0 0 4v1A1.5 1.5 0 0 1 19.5 17h-15A1.5 1.5 0 0 1 3 15.5v-1a2 2 0 0 0 0-4v-1zm9 .75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm0 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm0 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5z"/>
+          </svg>
+          <span className="text-lg font-black tracking-tight">
+            Grid<span className="text-violet-600">Tickets</span>
+          </span>
         </Link>
 
         {/* Divider */}
